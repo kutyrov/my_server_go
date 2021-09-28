@@ -9,6 +9,13 @@ type Storage struct {
 	storage map[string][]string
 }
 
+func NewStorage() *Storage {
+	return &Storage{
+		mu:      sync.Mutex{},
+		storage: make(map[string][]string),
+	}
+}
+
 func (s *Storage) Push(key, value string) {
 	s.mu.Lock()
 
@@ -19,12 +26,13 @@ func (s *Storage) Push(key, value string) {
 }
 
 func (s *Storage) Pop(key string) string {
-
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if len(s.storage[key]) != 0 {
-		s.mu.Lock()
+		//s.mu.Lock()
 		temp := s.storage[key][0]
 		s.storage[key] = s.storage[key][1:]
-		s.mu.Unlock()
+		//s.mu.Unlock()
 		return temp
 	}
 

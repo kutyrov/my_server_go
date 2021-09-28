@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -19,16 +18,14 @@ func init() {
 
 func main() {
 	flag.Parse()
-	// fmt.Println(port)
+
 	bind_port := ":8080"
-	fmt.Println(port)
+
 	if _, err := strconv.Atoi(port); err != nil && port != "8080" {
 		log.Println("порт невалиден, выставлен дефолтный 8080")
 	} else {
 		bind_port = ":" + port
 	}
-
-	fmt.Println(bind_port)
 
 	my_server := server.New(bind_port)
 

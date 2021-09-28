@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,7 +29,6 @@ func (s *Server) Start() error {
 
 func (s *Server) SwitchMethod(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		fmt.Println("есть get запрос")
 		c := make(chan string)
 		go s.PopElem(r.URL.String(), c)
 		value := <-c // значение не считается пока в канал не запишем что нибудь

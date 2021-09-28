@@ -29,10 +29,8 @@ func (s *Storage) Pop(key string) string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if len(s.storage[key]) != 0 {
-		//s.mu.Lock()
 		temp := s.storage[key][0]
 		s.storage[key] = s.storage[key][1:]
-		//s.mu.Unlock()
 		return temp
 	}
 

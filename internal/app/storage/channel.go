@@ -1,13 +1,15 @@
 package storage
 
-import "sync"
+import (
+	"sync"
+)
 
 type Channel struct {
 	mu    sync.Mutex
 	queue chan string
 }
 
-func NewChannel(key string) *Channel {
+func NewChannel() *Channel {
 	return &Channel{
 		queue: make(chan string),
 	}

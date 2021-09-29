@@ -14,7 +14,7 @@ func NewStorage() *Storage {
 
 func (s *Storage) Push(key, value string) {
 	if _, err := s.storage[key]; err {
-		s.storage[key] = NewChannel(value)
+		s.storage[key] = NewChannel()
 	}
 	s.storage[key].Push(value)
 

@@ -1,38 +1,30 @@
 package storage
 
-import (
-	"sync"
-)
+import "time"
 
 type Storage struct {
-	mu      sync.Mutex
-	storage map[string][]string
+	storage map[string]*Channel
 }
 
 func NewStorage() *Storage {
 	return &Storage{
-		mu:      sync.Mutex{},
-		storage: make(map[string][]string),
+		storage: make(map[string]*Channel),
 	}
 }
 
 func (s *Storage) Push(key, value string) {
-	s.mu.Lock()
-
-	s.storage[key] = append(s.storage[key], value)
-
-	s.mu.Unlock()
+	if _, err := s.storage[key]; err {
+		s.storage[key] = NewChannel(value)
+	}
+	s.storage[key].Push(value)
 
 }
 
-func (s *Storage) Pop(key string) string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if len(s.storage[key]) != 0 {
-		temp := s.storage[key][0]
-		s.storage[key] = s.storage[key][1:]
-		return temp
+func (s *Storage) Pop(key string, timeout time.Duration) string {
+	select {
+	case res := <-s.storage[key].Pop():
+		return res
+	case <-time.After(timeout):
+		return ""
 	}
-
-	return ""
 }

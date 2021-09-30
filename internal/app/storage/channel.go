@@ -11,7 +11,7 @@ type Channel struct {
 
 func NewChannel() *Channel {
 	return &Channel{
-		queue: make(chan string),
+		queue: make(chan string, 10),
 	}
 }
 
@@ -21,11 +21,9 @@ func (c *Channel) Push(value string) {
 	c.mu.Unlock()
 }
 
-func (c *Channel) Pop() chan string {
+func (c *Channel) Pop() string {
 	c.mu.Lock()
-	temp := make(chan string)
 	res := <-c.queue
 	c.mu.Unlock()
-	temp <- res
-	return temp
+	return res
 }

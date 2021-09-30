@@ -9,9 +9,15 @@ import (
 	"github.com/kutyrov/my_server_go/internal/app/storage"
 )
 
+type MyStorage interface {
+	Push(string, string)
+	Pop(string) string
+}
+
 type Server struct {
 	port    string
-	storage *storage.Storage
+	storage MyStorage
+	//storage *storage.Storage
 }
 
 func New(port string) *Server {

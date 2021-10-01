@@ -18,13 +18,8 @@ func (s *Storage) Push(key, value string) {
 
 }
 
-func (s *Storage) Pop(key string) string {
-	// c := make(chan string)
-	// select {
-	// case c <- s.storage[key].Pop():
-	// 	return <-c
-	// case <-time.After(timeout):
-	// 	return ""
-	// }
-	return s.storage[key].Pop()
+func (s *Storage) Pop(key string) chan string {
+	c := make(chan string)
+	c <- s.storage[key].Pop()
+	return c
 }

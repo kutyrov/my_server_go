@@ -25,8 +25,7 @@ func (c *Channel) Push(value string) {
 
 func (c *Channel) Pop() string {
 	c.mu.Lock()
-	var res string
-	res = <-c.queue
+	res := <-c.queue
 	c.Len -= 1
 	c.mu.Unlock()
 	return res
@@ -34,4 +33,12 @@ func (c *Channel) Pop() string {
 
 func (c *Channel) GetLen() int {
 	return c.Len
+}
+
+func (c *Channel) SafePop() string {
+	var res string
+	if c.Len > 0 {
+		res = c.Pop()
+	}
+	return res
 }

@@ -19,7 +19,7 @@ func (s *Storage) Push(key, value string) {
 }
 
 func (s *Storage) Pop(key string) chan string {
-	c := make(chan string)
+	c := make(chan string, 1)
 	c <- s.storage[key].Pop()
 	return c
 }

@@ -25,12 +25,15 @@ func main() {
 		log.Println("порт невалиден, выставлен дефолтный 8080")
 	} else {
 		bind_port = ":" + port
+
 	}
 
+	log.Println("Начинаю слушать порт", bind_port)
+
 	my_server := server.New(bind_port)
+	// добавить обработку сигналов
 
 	if err := my_server.Start(); err != nil {
 		log.Fatal(err)
 	}
-
 }

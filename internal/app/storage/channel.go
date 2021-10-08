@@ -1,44 +1,39 @@
 package storage
 
 import (
+	"fmt"
 	"sync"
 )
 
 type Channel struct {
 	mu    sync.Mutex
 	queue chan string
-	Len   int
 }
 
 func NewChannel() *Channel {
 	return &Channel{
-		queue: make(chan string, 10),
+		queue: make(chan string, 100),
 	}
 }
 
 func (c *Channel) Push(value string) {
 	c.mu.Lock()
+	fmt.Println("push locked")
 	c.queue <- value
-	c.Len += 1
 	c.mu.Unlock()
+	fmt.Println("push unlocked")
 }
 
 func (c *Channel) Pop() string {
-	c.mu.Lock()
-	res := <-c.queue
-	c.Len -= 1
-	c.mu.Unlock()
-	return res
-}
-
-func (c *Channel) GetLen() int {
-	return c.Len
-}
-
-func (c *Channel) SafePop() string {
-	var res string
-	if c.Len > 0 {
-		res = c.Pop()
+	for {
+		if len(c.queue) > 0 {
+			c.mu.Lock()
+			fmt.Println("pop locked")
+			res := <-c.queue
+			c.mu.Unlock()
+			fmt.Println("pop unlocked")
+			return res
+		}
 	}
-	return res
+
 }

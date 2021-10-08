@@ -1,8 +1,9 @@
 package server
 
 import (
+	"log"
 	"net/http"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -11,14 +12,13 @@ import (
 
 type MyStorage interface {
 	Push(string, string)
-	Pop(string) chan string
+	Pop(string, chan string)
 }
 
 type Server struct {
 	port    string
 	storage MyStorage
 	router  *mux.Router
-	//storage *storage.Storage
 }
 
 func New(port string) *Server {
@@ -30,10 +30,11 @@ func New(port string) *Server {
 }
 
 func (s *Server) Start() error {
-	//my_mux := http.NewServeMux()
-	//my_mux.HandleFunc("/", s.SwitchMethod)
-	s.configureRouter()
-	return http.ListenAndServe(s.port, s.router)
+	//s.configureRouter()
+	//return http.ListenAndServe(s.port, s.router)
+	mux := http.NewServeMux()
+	mux.Handle("/", http.HandlerFunc(s.HandleRoot()))
+	return http.ListenAndServe(s.port, mux)
 }
 
 func (s *Server) configureRouter() {
@@ -42,52 +43,50 @@ func (s *Server) configureRouter() {
 
 func (s *Server) HandleRoot() http.HandlerFunc {
 	return http.HandlerFunc(s.SwitchMethod)
-	// func(w http.ResponseWriter, r *http.Request) {
-	// 	// io.WriteString(w, "hello")
-	// }
 }
 
 func (s *Server) SwitchMethod(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		// 	c := make(chan string)
-		// 	go s.PopElem(r.URL.String(), c)
-		// 	value := <-c // значение не считается пока в канал не запишем что нибудь
-		// 	if value == "" {
-		// 		w.WriteHeader(http.StatusNotFound)
-		// 	} else {
-		// 		w.Write([]byte(value))
-		// 	}
-		// } else if r.Method == "PUT" {
-		var key string
+		// если url не соответствует шаблону то вернем фигню
+		key := r.URL.Path[1:] // убрали первый слэш
+
 		var timeout int
+		if _, ok := r.URL.Query()["timeout"]; ok {
+			var err error
+			timeout, err = strconv.Atoi(r.URL.Query()["timeout"][0])
+			if err != nil {
+				log.Println("Не получилось спарсить timeout")
+				// вернём фигню
+			}
+		}
+
+		log.Println("Таймаут", timeout)
+
 		// парсим таймаут
-		s.PopElem(key, time.Duration(timeout))
+		res := s.PopElem(key, time.Duration(timeout))
+		log.Println("Отдаём значение", res)
+		// здесь формируем response
+		w.Write([]byte(res))
 	} else if r.Method == "PUT" {
-		s.PushElem(r.URL.String())
+		// если url не соответствует шаблону то вернем фигню
+		key := r.URL.Path[1:] // убрали первый слэш
+		value := r.URL.Query()["v"][0]
+		s.PushElem(key, value)
 	}
 }
 
 func (s *Server) PopElem(key string, timeout time.Duration) string {
-	// words := strings.Split(data, "?timeout=")
-	// key := words[0]
-	// value := s.storage.Pop(key)
-	// if value == "" && len(words) == 2 {
-	// 	timeout, _ := strconv.Atoi(words[1])
-	// 	time.Sleep(time.Duration(timeout) * time.Second)
-	// 	value = s.storage.Pop(key)
-	// }
-	// c <- value
+	c := make(chan string)
+	//quit := make(chan string)
+	go s.storage.Pop(key, c)
 	select {
-	case res := <-s.storage.Pop(key):
+	case res := <-c:
 		return res
 	case <-time.After(timeout * time.Second):
 		return ""
 	}
 }
 
-func (s *Server) PushElem(data string) {
-	words := strings.Split(data, "?v=")
-	key := words[0]
-	value := words[1]
+func (s *Server) PushElem(key, value string) {
 	s.storage.Push(key, value)
 }
